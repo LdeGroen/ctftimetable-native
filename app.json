@@ -1,24 +1,60 @@
 {
   "expo": {
-    "name": "ctftimetable-native",
+    "name": "CTF Timetable",
     "slug": "ctftimetable-native",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "ctftimetable",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a5b64"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "nl.cafetheaterfestival.ctftimetable",
+      "associatedDomains": [
+        "applinks:timetable.cafetheaterfestival.nl"
+      ]
     },
     "android": {
+      "package": "nl.cafetheaterfestival.ctftimetable",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1a5b64",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "timetable.cafetheaterfestival.nl"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-localization",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#1a5b64"
+        }
+      ]
+    ]
   }
 }
