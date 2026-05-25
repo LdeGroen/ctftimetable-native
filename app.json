@@ -38,7 +38,10 @@
               "host": "timetable.cafetheaterfestival.nl"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -54,7 +57,8 @@
         {
           "color": "#1a5b64"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

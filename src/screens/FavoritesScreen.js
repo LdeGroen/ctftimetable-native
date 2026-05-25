@@ -1,14 +1,14 @@
-// FavoritesScreen — overzicht van alle voorstellingen die de gebruiker
-// gemarkeerd heeft als favoriet.
+// FavoritesScreen — alle favorieten van de gebruiker, chronologisch.
 
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Heart } from 'lucide-react-native';
 
-import { colors, spacing, radii, fontSizes, fonts, shadows } from '../theme';
+import { colors, spacing, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
 import { parseDateForSorting } from '../utils';
 import { translations } from '../translations';
+import PerformanceCard from '../components/PerformanceCard';
 
 export default function FavoritesScreen() {
     const { timetableData, favorites, toggleFavorite, language } = useApp();
@@ -40,24 +40,18 @@ export default function FavoritesScreen() {
         <FlatList
             data={items}
             keyExtractor={item => item.id}
-            contentContainerStyle={styles.list}
             renderItem={({ item }) => (
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <View>
-                            <Text style={styles.date}>{item.date} {item.time && `· ${item.time}`}</Text>
-                            <Text style={styles.event}>{item.event}</Text>
-                        </View>
-                        <Pressable onPress={() => toggleFavorite(item.originalPerformanceId)} hitSlop={8}>
-                            <Heart size={22} color={colors.danger} fill={colors.danger} />
-                        </Pressable>
-                    </View>
-                    <Text style={styles.title}>
-                        {item.artist ? `${item.artist} — ${item.title}` : item.title}
-                    </Text>
-                    <Text style={styles.location}>{item.location}</Text>
-                </View>
+                <PerformanceCard
+                    item={item}
+                    isFavorite
+                    onToggleFavorite={() => toggleFavorite(item.originalPerformanceId)}
+                    language={language}
+                />
             )}
+            ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+            contentContainerStyle={styles.list}
+            initialNumToRender={6}
+            windowSize={10}
         />
     );
 }
@@ -65,7 +59,6 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
     list: {
         padding: spacing.md,
-        gap: spacing.md,
     },
     empty: {
         flex: 1,
@@ -80,39 +73,5 @@ const styles = StyleSheet.create({
         fontFamily: fonts.regular,
         fontSize: fontSizes.base,
         opacity: 0.8,
-    },
-    card: {
-        backgroundColor: colors.cardBackground,
-        borderRadius: radii.lg,
-        padding: spacing.md,
-        ...shadows.card,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: spacing.sm,
-    },
-    date: {
-        fontSize: fontSizes.sm,
-        fontFamily: fonts.semibold,
-        color: colors.primary,
-    },
-    event: {
-        fontSize: fontSizes.xs,
-        fontFamily: fonts.regular,
-        color: colors.textSecondary,
-        marginTop: 2,
-    },
-    title: {
-        fontSize: fontSizes.base,
-        fontFamily: fonts.semibold,
-        color: colors.secondary,
-        marginBottom: spacing.xs,
-    },
-    location: {
-        fontSize: fontSizes.sm,
-        fontFamily: fonts.regular,
-        color: colors.textSecondary,
     },
 });

@@ -1,47 +1,124 @@
-// TimetableScreen — toont voorstellingen voor een gekozen event.
-// Per datum filterbaar; FlatList voor scrollperformance.
+// TimetableScreen — toont voorstellingen voor een gekozen event,
+// gefilterd op datum + zoekterm + genre/icon filters.
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, ScrollView } from 'react-native';
-import { Heart } from 'lucide-react-native';
+import { SlidersHorizontal } from 'lucide-react-native';
 
-import { colors, spacing, radii, fontSizes, fonts, shadows } from '../theme';
+import { colors, spacing, radii, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
 import { parseDateForSorting } from '../utils';
 import { translations } from '../translations';
+import PerformanceCard from '../components/PerformanceCard';
+import SearchBar from '../components/SearchBar';
+import FilterSheet from '../components/FilterSheet';
 
 const ALL_DATES = 'all';
 
-export default function TimetableScreen({ route }) {
+export default function TimetableScreen({ route, navigation }) {
     const { event } = route.params ?? {};
     const { timetableData, favorites, toggleFavorite, language } = useApp();
+
     const [selectedDate, setSelectedDate] = useState(ALL_DATES);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [genreFilters, setGenreFilters] = useState(new Set());
+    const [iconFilters, setIconFilters] = useState(new Set());
+    const [filterOpen, setFilterOpen] = useState(false);
 
     const t = translations[language]?.common ?? {};
+    const filterCount = genreFilters.size + iconFilters.size;
 
-    // Alleen items voor dit event
+    // Filterknop rechts in header
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <Pressable hitSlop={8} onPress={() => setFilterOpen(true)} style={styles.headerButton}>
+                    <SlidersHorizontal size={20} color={colors.textOnDark} />
+                    {filterCount > 0 && (
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>{filterCount}</Text>
+                        </View>
+                    )}
+                </Pressable>
+            ),
+        });
+    }, [navigation, filterCount]);
+
+    // Items voor dit event
     const itemsForEvent = useMemo(
         () => timetableData.filter(item => item.event === event),
         [timetableData, event]
     );
 
-    // Unieke datums (zonder 'Algemeen', chronologisch)
+    // Unieke datums (chronologisch)
     const dates = useMemo(() => {
         const set = new Set(
             itemsForEvent
-                .filter(item => item.date && item.date !== 'Algemeen' && item.date !== 'N/A')
-                .map(item => item.date)
+                .filter(i => i.date && i.date !== 'Algemeen' && i.date !== 'N/A')
+                .map(i => i.date)
         );
         return Array.from(set).sort(
             (a, b) => (parseDateForSorting(a) || 0) - (parseDateForSorting(b) || 0)
         );
     }, [itemsForEvent]);
 
-    // Items voor de geselecteerde datum
+    // Beschikbare genres voor dit event
+    const allGenres = useMemo(() => {
+        const set = new Set();
+        itemsForEvent.forEach(item => {
+            if (!item.genre || item.genre === 'N/A') return;
+            item.genre.split(',').map(g => g.trim()).forEach(g => set.add(g));
+        });
+        return Array.from(set).map(key => ({
+            key,
+            label: translations[language]?.genres?.[key] || key,
+        }));
+    }, [itemsForEvent, language]);
+
+    // Toegepaste filters
     const filteredItems = useMemo(() => {
-        if (selectedDate === ALL_DATES) return itemsForEvent;
-        return itemsForEvent.filter(item => item.date === selectedDate);
-    }, [itemsForEvent, selectedDate]);
+        let result = itemsForEvent;
+
+        // Datum
+        if (selectedDate !== ALL_DATES) {
+            result = result.filter(i => i.date === selectedDate);
+        }
+
+        // Zoekterm
+        const q = searchTerm.trim().toLowerCase();
+        if (q) {
+            result = result.filter(i =>
+                (i.artist || '').toLowerCase().includes(q) ||
+                (i.title || '').toLowerCase().includes(q) ||
+                (i.location || '').toLowerCase().includes(q)
+            );
+        }
+
+        // Genres
+        if (genreFilters.size > 0) {
+            result = result.filter(i => {
+                if (!i.genre) return false;
+                const itemGenres = i.genre.split(',').map(g => g.trim());
+                return itemGenres.some(g => genreFilters.has(g));
+            });
+        }
+
+        // Icon filters (alle moeten matchen)
+        if (iconFilters.size > 0) {
+            result = result.filter(i => {
+                if (!i.safetyInfo) return false;
+                return Array.from(iconFilters).every(key => i.safetyInfo[key]);
+            });
+        }
+
+        // Sorteer op tijd binnen één datum
+        return result.slice().sort((a, b) => {
+            const dA = parseDateForSorting(a.date) || 0;
+            const dB = parseDateForSorting(b.date) || 0;
+            if (dA !== dB) return dA - dB;
+            return (a.time || '').localeCompare(b.time || '');
+        });
+    }, [itemsForEvent, selectedDate, searchTerm, genreFilters, iconFilters]);
 
     return (
         <View style={styles.container}>
@@ -50,13 +127,13 @@ export default function TimetableScreen({ route }) {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.dateRow}
             >
-                <DateButton
+                <DateChip
                     label={t.allPerformances || 'Alle'}
                     active={selectedDate === ALL_DATES}
                     onPress={() => setSelectedDate(ALL_DATES)}
                 />
                 {dates.map(date => (
-                    <DateButton
+                    <DateChip
                         key={date}
                         label={date}
                         active={selectedDate === date}
@@ -65,127 +142,115 @@ export default function TimetableScreen({ route }) {
                 ))}
             </ScrollView>
 
+            <SearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t.searchPlaceholder || 'Zoek artiest, titel, locatie...'}
+            />
+
             <FlatList
                 data={filteredItems}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                    <PerformanceRow
+                    <PerformanceCard
                         item={item}
                         isFavorite={favorites.has(item.originalPerformanceId)}
                         onToggleFavorite={() => toggleFavorite(item.originalPerformanceId)}
+                        language={language}
                     />
                 )}
+                ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <Text style={styles.empty}>{t.noPerformancesFound || 'Geen voorstellingen gevonden'}</Text>
                 }
+                initialNumToRender={6}
+                windowSize={10}
+            />
+
+            <FilterSheet
+                visible={filterOpen}
+                onClose={() => setFilterOpen(false)}
+                genreFilters={genreFilters}
+                setGenreFilters={setGenreFilters}
+                allGenres={allGenres}
+                iconFilters={iconFilters}
+                setIconFilters={setIconFilters}
+                language={language}
             />
         </View>
     );
 }
 
-function DateButton({ label, active, onPress }) {
+function DateChip({ label, active, onPress }) {
     return (
         <Pressable
             onPress={onPress}
             style={({ pressed }) => [
-                styles.dateButton,
-                active && styles.dateButtonActive,
+                styles.chip,
+                active && styles.chipActive,
                 pressed && { opacity: 0.7 },
             ]}
         >
-            <Text style={[styles.dateButtonText, active && styles.dateButtonTextActive]}>
-                {label}
-            </Text>
+            <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
         </Pressable>
     );
 }
 
-function PerformanceRow({ item, isFavorite, onToggleFavorite }) {
-    const fullTitle = item.artist ? `${item.artist} — ${item.title}` : item.title;
-    return (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                {item.time && <Text style={styles.time}>{item.time}</Text>}
-                <Pressable onPress={onToggleFavorite} hitSlop={8} style={styles.heartButton}>
-                    <Heart
-                        size={22}
-                        color={isFavorite ? colors.danger : colors.textMuted}
-                        fill={isFavorite ? colors.danger : 'transparent'}
-                    />
-                </Pressable>
-            </View>
-            <Text style={styles.title}>{fullTitle}</Text>
-            <Text style={styles.location}>{item.location}</Text>
-        </View>
-    );
-}
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     dateRow: {
-        padding: spacing.sm,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         gap: spacing.sm,
         alignItems: 'center',
     },
-    dateButton: {
+    chip: {
         backgroundColor: colors.glassLight,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderRadius: radii.md,
     },
-    dateButtonActive: {
-        backgroundColor: colors.primary,
+    chipActive: {
+        backgroundColor: colors.primaryHover,
     },
-    dateButtonText: {
+    chipText: {
         color: colors.textOnDark,
         fontFamily: fonts.semibold,
         fontSize: fontSizes.sm,
     },
-    dateButtonTextActive: {
+    chipTextActive: {
         color: colors.textOnDark,
     },
     list: {
         padding: spacing.md,
-        gap: spacing.md,
-    },
-    card: {
-        backgroundColor: colors.cardBackground,
-        borderRadius: radii.lg,
-        padding: spacing.md,
-        ...shadows.card,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: spacing.xs,
-    },
-    heartButton: {
-        padding: spacing.xs,
-    },
-    time: {
-        fontSize: fontSizes.lg,
-        fontFamily: fonts.bold,
-        color: colors.textPrimary,
-    },
-    title: {
-        fontSize: fontSizes.base,
-        fontFamily: fonts.semibold,
-        color: colors.secondary,
-        marginBottom: spacing.xs,
-    },
-    location: {
-        fontSize: fontSizes.sm,
-        fontFamily: fonts.regular,
-        color: colors.textSecondary,
     },
     empty: {
         color: colors.textOnDark,
         textAlign: 'center',
         padding: spacing.xl,
         fontFamily: fonts.regular,
+        opacity: 0.8,
+    },
+    headerButton: {
+        padding: spacing.sm,
+        position: 'relative',
+    },
+    badge: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        backgroundColor: colors.danger,
+        borderRadius: radii.full,
+        minWidth: 18,
+        height: 18,
+        paddingHorizontal: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    badgeText: {
+        color: colors.textOnDark,
+        fontSize: 10,
+        fontFamily: fonts.bold,
     },
 });
