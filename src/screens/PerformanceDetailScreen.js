@@ -1,9 +1,11 @@
 // PerformanceDetailScreen — uitgebreide info over één voorstelling.
 // In de webversie was dit een popup; hier is het een volledig scherm.
 
-import React, { useMemo, useState, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useLayoutEffect, useEffect } from 'react';
 import { ScrollView, View, Text, Image, StyleSheet, Pressable } from 'react-native';
-import { ChevronDown, ChevronUp, Heart } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Heart, Volume2, VolumeX } from 'lucide-react-native';
+
+import { speak, stop as stopTts } from '../tts';
 
 import { colors, spacing, radii, fontSizes, fonts, shadows } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -18,6 +20,22 @@ export default function PerformanceDetailScreen({ route, navigation }) {
     const t = translations[language]?.common ?? {};
 
     const [scheduleOpen, setScheduleOpen] = useState(false);
+    const [speaking, setSpeaking] = useState(false);
+
+    // Stop TTS bij unmount
+    useEffect(() => {
+        return () => { stopTts(); };
+    }, []);
+
+    const handleSpeak = (text) => {
+        if (speaking) {
+            stopTts();
+            setSpeaking(false);
+        } else {
+            setSpeaking(true);
+            speak(text, language, { onDone: () => setSpeaking(false) });
+        }
+    };
 
     const title = item?.artist ? `${item.title} — ${item.artist}` : item?.title;
     const credits = item?.marketingCredits;
@@ -142,7 +160,23 @@ export default function PerformanceDetailScreen({ route, navigation }) {
 
             {aboutPerformance && (
                 <View style={styles.textBlock}>
-                    <Text style={styles.blockHeading}>{t.aboutThePerformance || 'Over de voorstelling'}</Text>
+                    <View style={styles.blockHeadingRow}>
+                        <Text style={[styles.blockHeading, { flex: 1, borderBottomWidth: 0, paddingBottom: 0 }]}>
+                            {t.aboutThePerformance || 'Over de voorstelling'}
+                        </Text>
+                        <Pressable
+                            onPress={() => handleSpeak(`${title}. ${aboutPerformance}`)}
+                            hitSlop={8}
+                            style={styles.ttsButton}
+                        >
+                            {speaking ? (
+                                <VolumeX size={20} color={colors.textOnDark} />
+                            ) : (
+                                <Volume2 size={20} color={colors.textOnDark} />
+                            )}
+                        </Pressable>
+                    </View>
+                    <View style={styles.headingUnderline} />
                     <Text style={styles.blockBody}>{aboutPerformance}</Text>
                 </View>
             )}
@@ -286,6 +320,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 2,
         borderBottomColor: 'rgba(255,255,255,0.3)',
         paddingBottom: spacing.xs,
+    },
+    blockHeadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    headingUnderline: {
+        borderBottomWidth: 2,
+        borderBottomColor: 'rgba(255,255,255,0.3)',
+        marginBottom: spacing.xs,
+    },
+    ttsButton: {
+        padding: spacing.xs,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: radii.full,
     },
     blockBody: {
         color: colors.textOnDark,

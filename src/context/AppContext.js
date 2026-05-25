@@ -6,6 +6,15 @@ import * as Localization from 'expo-localization';
 
 import { fetchAndBuildTimetable } from '../data';
 import { getJSON, setJSON, getItem, setItem, storageKeys } from '../storage';
+import {
+    requestPermissions as requestNotificationPermissions,
+    hasPermissions as hasNotificationPermissions,
+    syncFavoriteNotifications,
+    scheduleGeneralNotifications,
+    cancelAllNotifications,
+} from '../notifications';
+
+const NOTIF_PREFS_KEY = 'ctfNotificationPrefs';
 
 const AppContext = createContext(null);
 
@@ -22,6 +31,8 @@ export function AppProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [isOffline, setIsOffline] = useState(false);
     const [error, setError] = useState(null);
+    const [notifPrefs, setNotifPrefs] = useState({ enabled: false, minutesBefore: 15 });
+    const [notifPermission, setNotifPermission] = useState(false);
 
     /** Verwerk een verse data-payload (uit cache of API). */
     const applyData = useCallback((payload) => {
@@ -79,6 +90,12 @@ export function AppProvider({ children }) {
                 setFavorites(new Set(storedFavs));
             }
 
+            const storedPrefs = await getJSON(NOTIF_PREFS_KEY);
+            if (storedPrefs) setNotifPrefs({ ...notifPrefs, ...storedPrefs });
+
+            const perm = await hasNotificationPermissions();
+            setNotifPermission(perm);
+
             // 2. Cache lezen
             const cached = await getJSON(storageKeys.TIMETABLE_CACHE);
             if (cancelled) return;
@@ -118,6 +135,46 @@ export function AppProvider({ children }) {
         await setItem(storageKeys.LANGUAGE, lang);
     }, []);
 
+    /** Notificaties aan/uit zetten — vraagt indien nodig permissie. */
+    const setNotificationsEnabled = useCallback(async (enabled) => {
+        if (enabled) {
+            const granted = await requestNotificationPermissions();
+            setNotifPermission(granted);
+            if (!granted) return false;
+        } else {
+            await cancelAllNotifications();
+        }
+        const next = { ...notifPrefs, enabled };
+        setNotifPrefs(next);
+        await setJSON(NOTIF_PREFS_KEY, next);
+        return true;
+    }, [notifPrefs]);
+
+    /** Minutes-before instellen (5, 10, 15, 30, 60). */
+    const setMinutesBefore = useCallback(async (minutes) => {
+        const next = { ...notifPrefs, minutesBefore: minutes };
+        setNotifPrefs(next);
+        await setJSON(NOTIF_PREFS_KEY, next);
+    }, [notifPrefs]);
+
+    /** Sync notifications wanneer favorieten, data of prefs wijzigen. */
+    useEffect(() => {
+        if (!notifPrefs.enabled || !notifPermission || timetableData.length === 0) return;
+        syncFavoriteNotifications({
+            favorites: Array.from(favorites),
+            timetableData,
+            language,
+            minutesBefore: notifPrefs.minutesBefore,
+        }).catch(err => console.warn('syncFavoriteNotifications failed', err));
+    }, [favorites, timetableData, language, notifPrefs, notifPermission]);
+
+    /** Algemene notificaties (admin pushes) plannen wanneer data verandert. */
+    useEffect(() => {
+        if (!notifPermission || notifications.length === 0) return;
+        scheduleGeneralNotifications(notifications, language)
+            .catch(err => console.warn('scheduleGeneralNotifications failed', err));
+    }, [notifications, notifPermission, language]);
+
     const value = useMemo(() => ({
         timetableData,
         eventInfoMap,
@@ -129,13 +186,19 @@ export function AppProvider({ children }) {
         loading,
         isOffline,
         error,
+        notifPrefs,
+        notifPermission,
         refresh,
         toggleFavorite,
         changeLanguage,
+        setNotificationsEnabled,
+        setMinutesBefore,
     }), [
         timetableData, eventInfoMap, uniqueEvents, routes, notifications,
         favorites, language, loading, isOffline, error,
+        notifPrefs, notifPermission,
         refresh, toggleFavorite, changeLanguage,
+        setNotificationsEnabled, setMinutesBefore,
     ]);
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

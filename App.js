@@ -1,10 +1,12 @@
 import 'react-native-gesture-handler';
+import React, { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Oswald_400Regular, Oswald_600SemiBold, Oswald_700Bold } from '@expo-google-fonts/oswald';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Linking } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 import { colors } from './src/theme';
 import { AppProvider } from './src/context/AppContext';
@@ -15,15 +17,36 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import PerformanceDetailScreen from './src/screens/PerformanceDetailScreen';
 import RoutesScreen from './src/screens/RoutesScreen';
 import RouteDetailScreen from './src/screens/RouteDetailScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+    const navigationRef = useRef(null);
+
     const [fontsLoaded] = useFonts({
         Oswald_400Regular,
         Oswald_600SemiBold,
         Oswald_700Bold,
     });
+
+    // Notificatie-tap handler — navigeer naar de juiste plek.
+    useEffect(() => {
+        const sub = Notifications.addNotificationResponseReceivedListener(response => {
+            const data = response.notification.request.content.data || {};
+            if (data.url) {
+                if (data.openInBrowser) Linking.openURL(data.url);
+                else Linking.openURL(data.url);
+                return;
+            }
+            // Voor performance notifications hebben we nu nog geen directe lookup
+            // mogelijkheid zonder timetable data — gewoon naar Home navigeren.
+            if (navigationRef.current?.isReady()) {
+                navigationRef.current.navigate('Home');
+            }
+        });
+        return () => sub.remove();
+    }, []);
 
     if (!fontsLoaded) {
         return (
@@ -36,7 +59,7 @@ export default function App() {
     return (
         <SafeAreaProvider>
             <AppProvider>
-                <NavigationContainer>
+                <NavigationContainer ref={navigationRef}>
                     <StatusBar style="light" />
                     <Stack.Navigator
                         initialRouteName="Home"
@@ -81,6 +104,11 @@ export default function App() {
                             name="RouteDetail"
                             component={RouteDetailScreen}
                             options={{ title: 'Route' }}
+                        />
+                        <Stack.Screen
+                            name="Settings"
+                            component={SettingsScreen}
+                            options={{ title: 'Instellingen' }}
                         />
                     </Stack.Navigator>
                 </NavigationContainer>

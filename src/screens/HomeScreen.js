@@ -1,9 +1,9 @@
 // HomeScreen — toont de daadwerkelijke events uit de backend.
 // Met taalwissel-knop, favorieten-link en offline indicator.
 
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
-import { Heart, Globe, RefreshCw, Map } from 'lucide-react-native';
+import { Heart, Globe, RefreshCw, Map, Settings } from 'lucide-react-native';
 
 import { colors, spacing, radii, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -16,6 +16,16 @@ export default function HomeScreen({ navigation }) {
     } = useApp();
 
     const t = translations[language]?.common ?? {};
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <Pressable hitSlop={8} onPress={() => navigation.navigate('Settings')} style={{ padding: 8 }}>
+                    <Settings size={20} color={colors.textOnDark} />
+                </Pressable>
+            ),
+        });
+    }, [navigation]);
 
     if (loading && uniqueEvents.length === 0) {
         return (
