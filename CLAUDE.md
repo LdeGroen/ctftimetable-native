@@ -52,7 +52,17 @@ Zie [README.md](./README.md) voor de volledige roadmap. Huidige fase: **Fase 0 �
 - **Fase 3** — schermen (Home, Timetable, Favorites, Detail, Routes) ✅
 - **Fase 4** — native features (notifications, sharing, TTS) ✅
 - **Fase 5** — iOS/Android pariteit (icons, splash, deep links, animaties) ✅
-- **Fase 6** — release (EAS Build, stores) ← **NU**
+- **Fase 6** — release (EAS Build, stores) ✅
+
+## Status: alle fases afgerond
+De migratie is in code-vorm compleet. Wat nog moet gebeuren is operationeel:
+1. `eas init` runnen om EAS project ID te genereren (vul `app.json` placeholders in)
+2. Eerste production build via `eas build --platform all --profile production`
+3. Apple Developer + Google Play Console setup (kosten + paperwork)
+4. Eerste store submissions
+5. Testen op fysieke toestellen met development build
+
+Zie [RELEASE.md](./RELEASE.md) voor stap-voor-stap instructies.
 
 ## Conventies
 - Mappen lowercase, bestanden PascalCase voor componenten/screens

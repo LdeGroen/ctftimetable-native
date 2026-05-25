@@ -54,6 +54,25 @@ EXPO_PUBLIC_API_URL=https://backend.cafetheaterfestival.nl
 
 ---
 
-## Roadmap
+## Release maken
 
-Zie de [migratie-roadmap](#) — momenteel in **Fase 0: setup**.
+Zie [RELEASE.md](./RELEASE.md) voor de complete release guide (EAS Build, Play Store, App Store, OTA updates).
+
+Snelle commands:
+```bash
+eas build --platform android --profile production   # Android AAB
+eas build --platform ios --profile production       # iOS IPA
+eas submit --platform android --latest              # naar Play Store
+eas submit --platform ios --latest                  # naar App Store
+eas update --branch production --message "..."      # OTA update zonder build
+```
+
+## Roadmap status
+
+- ✅ Fase 0 — Expo setup
+- ✅ Fase 1 — Data fetching + AsyncStorage cache + favorites
+- ✅ Fase 2 — PerformanceCard, CrowdMeter, filters, search
+- ✅ Fase 3 — Detail-scherm, block view, routes
+- ✅ Fase 4 — Notificaties + TTS + settings
+- ✅ Fase 5 — Branding, deep links, animaties, polish
+- ✅ Fase 6 — EAS Build configuratie + CI workflows
