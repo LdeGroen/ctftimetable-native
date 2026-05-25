@@ -11,14 +11,8 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/REPLACE_WITH_EAS_PROJECT_ID",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
-    },
-    "extra": {
-      "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
-      }
     },
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -73,6 +67,12 @@
       ],
       "@react-native-community/datetimepicker",
       "expo-build-properties"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3037b890-70ba-425d-bd37-ceb5e47c1984"
+      }
+    },
+    "owner": "lucdeg"
   }
 }
