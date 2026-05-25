@@ -15,9 +15,21 @@ import { SAFETY_ICONS } from '../safetyIcons';
 import RecommendationCard from '../components/RecommendationCard';
 
 export default function PerformanceDetailScreen({ route, navigation }) {
-    const { item } = route.params ?? {};
+    const { item: itemParam, id: idParam } = route.params ?? {};
     const { timetableData, favorites, toggleFavorite, language } = useApp();
     const t = translations[language]?.common ?? {};
+
+    // Bij deep links krijgen we alleen een ID; lookup de voorstelling.
+    const item = useMemo(() => {
+        if (itemParam) return itemParam;
+        if (idParam) {
+            return timetableData.find(p =>
+                p.id === idParam ||
+                p.originalPerformanceId === idParam
+            );
+        }
+        return null;
+    }, [itemParam, idParam, timetableData]);
 
     const [scheduleOpen, setScheduleOpen] = useState(false);
     const [speaking, setSpeaking] = useState(false);
@@ -108,7 +120,11 @@ export default function PerformanceDetailScreen({ route, navigation }) {
     if (!item) {
         return (
             <View style={styles.centerScreen}>
-                <Text style={styles.bodyText}>{t.noDataFound || 'Voorstelling niet gevonden'}</Text>
+                <Text style={styles.bodyText}>
+                    {idParam
+                        ? (t.performanceNotFound || 'Voorstelling niet gevonden. Probeer de app te verversen.')
+                        : (t.noDataFound || 'Geen data')}
+                </Text>
             </View>
         );
     }

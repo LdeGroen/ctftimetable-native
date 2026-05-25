@@ -18,6 +18,7 @@ import PerformanceDetailScreen from './src/screens/PerformanceDetailScreen';
 import RoutesScreen from './src/screens/RoutesScreen';
 import RouteDetailScreen from './src/screens/RouteDetailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import { linking } from './src/linking';
 
 const Stack = createNativeStackNavigator();
 
@@ -59,7 +60,7 @@ export default function App() {
     return (
         <SafeAreaProvider>
             <AppProvider>
-                <NavigationContainer ref={navigationRef}>
+                <NavigationContainer ref={navigationRef} linking={linking}>
                     <StatusBar style="light" />
                     <Stack.Navigator
                         initialRouteName="Home"

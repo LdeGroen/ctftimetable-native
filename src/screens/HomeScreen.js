@@ -8,6 +8,7 @@ import { Heart, Globe, RefreshCw, Map, Settings } from 'lucide-react-native';
 import { colors, spacing, radii, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
 import { translations } from '../translations';
+import FadeInView from '../components/FadeInView';
 
 export default function HomeScreen({ navigation }) {
     const {
@@ -76,38 +77,43 @@ export default function HomeScreen({ navigation }) {
             )}
 
             <View style={styles.buttonGrid}>
-                {uniqueEvents.map(event => {
+                {uniqueEvents.map((event, idx) => {
                     const dateLabel = eventInfoMap[event]?.dateString;
                     return (
-                        <Pressable
-                            key={event}
-                            style={({ pressed }) => [styles.eventButton, pressed && styles.buttonPressed]}
-                            onPress={() => navigation.navigate('Timetable', { event })}
-                        >
-                            <Text style={styles.eventButtonText}>{event}</Text>
-                            {dateLabel && <Text style={styles.eventDate}>{dateLabel}</Text>}
-                        </Pressable>
+                        <FadeInView key={event} delay={idx * 80}>
+                            <Pressable
+                                style={({ pressed }) => [styles.eventButton, pressed && styles.buttonPressed]}
+                                onPress={() => navigation.navigate('Timetable', { event })}
+                            >
+                                <Text style={styles.eventButtonText}>{event}</Text>
+                                {dateLabel && <Text style={styles.eventDate}>{dateLabel}</Text>}
+                            </Pressable>
+                        </FadeInView>
                     );
                 })}
 
-                <Pressable
-                    style={({ pressed }) => [styles.favButton, pressed && styles.buttonPressed]}
-                    onPress={() => navigation.navigate('Favorites')}
-                >
-                    <Heart size={20} color={colors.textOnDark} />
-                    <Text style={styles.favButtonText}>
-                        {t.favorites || 'Favorieten'} {favorites.size > 0 && `(${favorites.size})`}
-                    </Text>
-                </Pressable>
-
-                {routes?.length > 0 && (
+                <FadeInView delay={uniqueEvents.length * 80}>
                     <Pressable
                         style={({ pressed }) => [styles.favButton, pressed && styles.buttonPressed]}
-                        onPress={() => navigation.navigate('Routes')}
+                        onPress={() => navigation.navigate('Favorites')}
                     >
-                        <Map size={20} color={colors.textOnDark} />
-                        <Text style={styles.favButtonText}>{t.routes || 'Routes'}</Text>
+                        <Heart size={20} color={colors.textOnDark} />
+                        <Text style={styles.favButtonText}>
+                            {t.favorites || 'Favorieten'} {favorites.size > 0 && `(${favorites.size})`}
+                        </Text>
                     </Pressable>
+                </FadeInView>
+
+                {routes?.length > 0 && (
+                    <FadeInView delay={(uniqueEvents.length + 1) * 80}>
+                        <Pressable
+                            style={({ pressed }) => [styles.favButton, pressed && styles.buttonPressed]}
+                            onPress={() => navigation.navigate('Routes')}
+                        >
+                            <Map size={20} color={colors.textOnDark} />
+                            <Text style={styles.favButtonText}>{t.routes || 'Routes'}</Text>
+                        </Pressable>
+                    </FadeInView>
                 )}
             </View>
         </ScrollView>

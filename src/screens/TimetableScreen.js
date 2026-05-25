@@ -2,7 +2,7 @@
 // gefilterd op datum + zoekterm + genre/icon filters.
 
 import React, { useMemo, useState, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { SlidersHorizontal, LayoutGrid } from 'lucide-react-native';
 
 import { colors, spacing, radii, fontSizes, fonts } from '../theme';
@@ -17,7 +17,7 @@ const ALL_DATES = 'all';
 
 export default function TimetableScreen({ route, navigation }) {
     const { event } = route.params ?? {};
-    const { timetableData, favorites, toggleFavorite, language } = useApp();
+    const { timetableData, favorites, toggleFavorite, language, loading, refresh } = useApp();
 
     const [selectedDate, setSelectedDate] = useState(ALL_DATES);
     const [searchTerm, setSearchTerm] = useState('');
@@ -176,6 +176,13 @@ export default function TimetableScreen({ route, navigation }) {
                 }
                 initialNumToRender={6}
                 windowSize={10}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={() => refresh({ silent: false })}
+                        tintColor={colors.textOnDark}
+                    />
+                }
             />
 
             <FilterSheet

@@ -46,13 +46,13 @@ Geconfigureerd in `app.json` via `scheme: "ctftimetable"` + iOS associated domai
 Zie [README.md](./README.md) voor de volledige roadmap. Huidige fase: **Fase 0 — voorbereiding**.
 
 ### Roadmap fases
-- **Fase 0** — setup (Expo init, dependencies, herbruikbare bestanden) ← **NU**
-- **Fase 1** — data & state (API, AsyncStorage cache, favorites)
-- **Fase 2** — kerncomponenten (PerformanceCard, filters, navigation)
-- **Fase 3** — schermen (Home, Timetable, Favorites, Detail, Routes)
-- **Fase 4** — native features (notifications, sharing, TTS)
-- **Fase 5** — iOS/Android pariteit
-- **Fase 6** — release (EAS Build, stores)
+- **Fase 0** — setup (Expo init, dependencies, herbruikbare bestanden) ✅
+- **Fase 1** — data & state (API, AsyncStorage cache, favorites) ✅
+- **Fase 2** — kerncomponenten (PerformanceCard, filters, navigation) ✅
+- **Fase 3** — schermen (Home, Timetable, Favorites, Detail, Routes) ✅
+- **Fase 4** — native features (notifications, sharing, TTS) ✅
+- **Fase 5** — iOS/Android pariteit (icons, splash, deep links, animaties) ✅
+- **Fase 6** — release (EAS Build, stores) ← **NU**
 
 ## Conventies
 - Mappen lowercase, bestanden PascalCase voor componenten/screens
