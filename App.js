@@ -7,8 +7,10 @@ import { useFonts, Oswald_400Regular, Oswald_600SemiBold, Oswald_700Bold } from 
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { colors } from './src/theme';
+import { AppProvider } from './src/context/AppContext';
 import HomeScreen from './src/screens/HomeScreen';
 import TimetableScreen from './src/screens/TimetableScreen';
+import FavoritesScreen from './src/screens/FavoritesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,29 +31,36 @@ export default function App() {
 
     return (
         <SafeAreaProvider>
-            <NavigationContainer>
-                <StatusBar style="light" />
-                <Stack.Navigator
-                    initialRouteName="Home"
-                    screenOptions={{
-                        headerStyle: { backgroundColor: colors.primary },
-                        headerTintColor: colors.textOnDark,
-                        headerTitleStyle: { fontFamily: 'Oswald_600SemiBold' },
-                        contentStyle: { backgroundColor: colors.appBackground },
-                    }}
-                >
-                    <Stack.Screen
-                        name="Home"
-                        component={HomeScreen}
-                        options={{ title: 'CTF Timetable' }}
-                    />
-                    <Stack.Screen
-                        name="Timetable"
-                        component={TimetableScreen}
-                        options={({ route }) => ({ title: route.params?.event ?? 'Timetable' })}
-                    />
-                </Stack.Navigator>
-            </NavigationContainer>
+            <AppProvider>
+                <NavigationContainer>
+                    <StatusBar style="light" />
+                    <Stack.Navigator
+                        initialRouteName="Home"
+                        screenOptions={{
+                            headerStyle: { backgroundColor: colors.primary },
+                            headerTintColor: colors.textOnDark,
+                            headerTitleStyle: { fontFamily: 'Oswald_600SemiBold' },
+                            contentStyle: { backgroundColor: colors.appBackground },
+                        }}
+                    >
+                        <Stack.Screen
+                            name="Home"
+                            component={HomeScreen}
+                            options={{ title: 'CTF Timetable' }}
+                        />
+                        <Stack.Screen
+                            name="Timetable"
+                            component={TimetableScreen}
+                            options={({ route }) => ({ title: route.params?.event ?? 'Timetable' })}
+                        />
+                        <Stack.Screen
+                            name="Favorites"
+                            component={FavoritesScreen}
+                            options={{ title: 'Favorieten' }}
+                        />
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </AppProvider>
         </SafeAreaProvider>
     );
 }
