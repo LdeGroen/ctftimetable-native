@@ -10,7 +10,7 @@ import { parseDateForSorting } from '../utils';
 import { translations } from '../translations';
 import PerformanceCard from '../components/PerformanceCard';
 
-export default function FavoritesScreen() {
+export default function FavoritesScreen({ navigation }) {
     const { timetableData, favorites, toggleFavorite, language } = useApp();
     const t = translations[language]?.common ?? {};
 
@@ -45,6 +45,7 @@ export default function FavoritesScreen() {
                     item={item}
                     isFavorite
                     onToggleFavorite={() => toggleFavorite(item.originalPerformanceId)}
+                    onPress={(pItem) => navigation.navigate('PerformanceDetail', { item: pItem })}
                     language={language}
                 />
             )}

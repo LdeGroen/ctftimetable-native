@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
-import { Heart, Globe, RefreshCw } from 'lucide-react-native';
+import { Heart, Globe, RefreshCw, Map } from 'lucide-react-native';
 
 import { colors, spacing, radii, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -11,7 +11,7 @@ import { translations } from '../translations';
 
 export default function HomeScreen({ navigation }) {
     const {
-        uniqueEvents, eventInfoMap, language, loading, isOffline, error,
+        uniqueEvents, eventInfoMap, routes, language, loading, isOffline, error,
         favorites, refresh, changeLanguage,
     } = useApp();
 
@@ -89,6 +89,16 @@ export default function HomeScreen({ navigation }) {
                         {t.favorites || 'Favorieten'} {favorites.size > 0 && `(${favorites.size})`}
                     </Text>
                 </Pressable>
+
+                {routes?.length > 0 && (
+                    <Pressable
+                        style={({ pressed }) => [styles.favButton, pressed && styles.buttonPressed]}
+                        onPress={() => navigation.navigate('Routes')}
+                    >
+                        <Map size={20} color={colors.textOnDark} />
+                        <Text style={styles.favButtonText}>{t.routes || 'Routes'}</Text>
+                    </Pressable>
+                )}
             </View>
         </ScrollView>
     );

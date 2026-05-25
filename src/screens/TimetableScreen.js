@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, ScrollView } from 'react-native';
-import { SlidersHorizontal } from 'lucide-react-native';
+import { SlidersHorizontal, LayoutGrid } from 'lucide-react-native';
 
 import { colors, spacing, radii, fontSizes, fonts } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -32,17 +32,26 @@ export default function TimetableScreen({ route, navigation }) {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <Pressable hitSlop={8} onPress={() => setFilterOpen(true)} style={styles.headerButton}>
-                    <SlidersHorizontal size={20} color={colors.textOnDark} />
-                    {filterCount > 0 && (
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{filterCount}</Text>
-                        </View>
-                    )}
-                </Pressable>
+                <View style={styles.headerRow}>
+                    <Pressable
+                        hitSlop={8}
+                        onPress={() => navigation.replace('BlockTimetable', { event })}
+                        style={styles.headerButton}
+                    >
+                        <LayoutGrid size={20} color={colors.textOnDark} />
+                    </Pressable>
+                    <Pressable hitSlop={8} onPress={() => setFilterOpen(true)} style={styles.headerButton}>
+                        <SlidersHorizontal size={20} color={colors.textOnDark} />
+                        {filterCount > 0 && (
+                            <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{filterCount}</Text>
+                            </View>
+                        )}
+                    </Pressable>
+                </View>
             ),
         });
-    }, [navigation, filterCount]);
+    }, [navigation, filterCount, event]);
 
     // Items voor dit event
     const itemsForEvent = useMemo(
@@ -156,6 +165,7 @@ export default function TimetableScreen({ route, navigation }) {
                         item={item}
                         isFavorite={favorites.has(item.originalPerformanceId)}
                         onToggleFavorite={() => toggleFavorite(item.originalPerformanceId)}
+                        onPress={(pItem) => navigation.navigate('PerformanceDetail', { item: pItem })}
                         language={language}
                     />
                 )}
@@ -231,6 +241,11 @@ const styles = StyleSheet.create({
         padding: spacing.xl,
         fontFamily: fonts.regular,
         opacity: 0.8,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
     },
     headerButton: {
         padding: spacing.sm,

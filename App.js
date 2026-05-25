@@ -10,7 +10,11 @@ import { colors } from './src/theme';
 import { AppProvider } from './src/context/AppContext';
 import HomeScreen from './src/screens/HomeScreen';
 import TimetableScreen from './src/screens/TimetableScreen';
+import BlockTimetableScreen from './src/screens/BlockTimetableScreen';
 import FavoritesScreen from './src/screens/FavoritesScreen';
+import PerformanceDetailScreen from './src/screens/PerformanceDetailScreen';
+import RoutesScreen from './src/screens/RoutesScreen';
+import RouteDetailScreen from './src/screens/RouteDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,9 +58,29 @@ export default function App() {
                             options={({ route }) => ({ title: route.params?.event ?? 'Timetable' })}
                         />
                         <Stack.Screen
+                            name="BlockTimetable"
+                            component={BlockTimetableScreen}
+                            options={({ route }) => ({ title: `${route.params?.event ?? ''} — Blokken` })}
+                        />
+                        <Stack.Screen
                             name="Favorites"
                             component={FavoritesScreen}
                             options={{ title: 'Favorieten' }}
+                        />
+                        <Stack.Screen
+                            name="PerformanceDetail"
+                            component={PerformanceDetailScreen}
+                            options={{ title: 'Voorstelling' }}
+                        />
+                        <Stack.Screen
+                            name="Routes"
+                            component={RoutesScreen}
+                            options={{ title: 'Routes' }}
+                        />
+                        <Stack.Screen
+                            name="RouteDetail"
+                            component={RouteDetailScreen}
+                            options={{ title: 'Route' }}
                         />
                     </Stack.Navigator>
                 </NavigationContainer>
