@@ -48,4 +48,7 @@ jobs:
         run: npm ci
 
       - name: Build on EAS
-        run: eas build --platform ${{ github.event.inputs.platform }} --profile ${{ github.event.inputs.profile }} --non-interactive --no-wait
+        env:
+          PLATFORM: ${{ github.event.inputs.platform }}
+          PROFILE: ${{ github.event.inputs.profile }}
+        run: eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
